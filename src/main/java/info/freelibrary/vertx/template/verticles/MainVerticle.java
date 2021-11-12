@@ -1,6 +1,8 @@
 
 package info.freelibrary.vertx.template.verticles;
 
+import static info.freelibrary.util.Constants.INADDR_ANY;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -22,22 +24,30 @@ import io.vertx.ext.web.openapi.RouterBuilder;
  */
 public class MainVerticle extends AbstractVerticle {
 
+    /**
+     * A logger for the main verticle.
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class, MessageCodes.BUNDLE);
 
+    /**
+     * An OpenAPI definition that the main verticle users to route requests.
+     */
     private static final String API_SPEC = "src/main/resources/template.yaml";
 
+    /**
+     * The main verticle's HTTP server.
+     */
     private HttpServer myServer;
 
     @Override
     public void start(final Promise<Void> aPromise) {
-        ConfigRetriever.create(vertx).getConfig()
-                .onSuccess(config -> configureServer(config.mergeIn(config()), aPromise))
-                .onFailure(error -> aPromise.fail(error));
+        ConfigRetriever.create(vertx).getConfig().onFailure(aPromise::fail)
+                .onSuccess(config -> configureServer(config.mergeIn(config()), aPromise));
     }
 
     @Override
     public void stop(final Promise<Void> aPromise) {
-        myServer.close().onSuccess(result -> aPromise.complete()).onFailure(error -> aPromise.fail(error));
+        myServer.close().onFailure(aPromise::fail).onSuccess(result -> aPromise.complete());
     }
 
     /**
@@ -47,25 +57,20 @@ public class MainVerticle extends AbstractVerticle {
      * @param aPromise A startup promise
      */
     private void configureServer(final JsonObject aConfig, final Promise<Void> aPromise) {
+        final String host = aConfig.getString(Config.HTTP_HOST, INADDR_ANY);
         final int port = aConfig.getInteger(Config.HTTP_PORT, 8888);
-        final String host = aConfig.getString(Config.HTTP_HOST, "0.0.0.0");
 
-        RouterBuilder.create(vertx, API_SPEC).onComplete(routerConfig -> {
-            if (routerConfig.succeeded()) {
-                final HttpServerOptions serverOptions = new HttpServerOptions().setPort(port).setHost(host);
-                final RouterBuilder routerBuilder = routerConfig.result();
+        RouterBuilder.create(vertx, API_SPEC).onFailure(aPromise::fail).onSuccess(routeBuilder -> {
+            final HttpServerOptions serverOptions = new HttpServerOptions().setPort(port).setHost(host);
 
-                // Associate handlers with operation IDs from the application's OpenAPI specification
-                routerBuilder.operation(Op.GET_STATUS).handler(new StatusHandler(getVertx()));
+            // Associate handlers with operation IDs from the application's OpenAPI specification
+            routeBuilder.operation(Op.GET_STATUS).handler(new StatusHandler(getVertx()));
 
-                myServer = getVertx().createHttpServer(serverOptions).requestHandler(routerBuilder.createRouter());
-                myServer.listen().onSuccess(result -> {
-                    LOGGER.info(MessageCodes.TMPL_001, port);
-                    aPromise.complete();
-                }).onFailure(error -> aPromise.fail(error));
-            } else {
-                aPromise.fail(routerConfig.cause());
-            }
+            myServer = getVertx().createHttpServer(serverOptions).requestHandler(routeBuilder.createRouter());
+            myServer.listen().onFailure(aPromise::fail).onSuccess(result -> {
+                LOGGER.info(MessageCodes.CODE_001, port);
+                aPromise.complete();
+            });
         });
     }
 }

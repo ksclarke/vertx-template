@@ -1,6 +1,8 @@
 
 package info.freelibrary.vertx.template.verticles;
 
+import static info.freelibrary.util.Constants.INADDR_ANY;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,7 +11,6 @@ import org.junit.runner.RunWith;
 import info.freelibrary.util.HTTP;
 
 import info.freelibrary.vertx.template.Config;
-import info.freelibrary.vertx.template.utils.TestConstants;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
@@ -38,14 +39,15 @@ public class MainVerticleTest {
      */
     @Before
     public void setUp(final TestContext aContext) {
-        final int port = Integer.parseInt(System.getProperty(Config.HTTP_PORT));
+        final int port = Integer.parseInt(System.getenv(Config.HTTP_PORT));
         final DeploymentOptions options = new DeploymentOptions();
         final Async asyncTask = aContext.async();
 
         aContext.put(Config.HTTP_PORT, port);
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
+
         myContext.vertx().deployVerticle(MainVerticle.class.getName(), options)
-                .onSuccess(result -> asyncTask.complete()).onFailure(error -> aContext.fail(error));
+                .onSuccess(result -> asyncTask.complete()).onFailure(aContext::fail);
     }
 
     /**
@@ -58,14 +60,10 @@ public class MainVerticleTest {
         final WebClient client = WebClient.create(myContext.vertx());
         final Async asyncTask = aContext.async();
 
-        client.get(aContext.get(Config.HTTP_PORT), TestConstants.INADDR_ANY, "/status").send(get -> {
-            if (get.succeeded()) {
-                aContext.assertEquals(HTTP.OK, get.result().statusCode());
-                complete(asyncTask);
-            } else {
-                aContext.fail(get.cause());
-            }
-        });
+        client.get(aContext.get(Config.HTTP_PORT), INADDR_ANY, "/status").send().onSuccess(response -> {
+            aContext.assertEquals(HTTP.OK, response.statusCode());
+            complete(asyncTask);
+        }).onFailure(aContext::fail);
     }
 
     /**

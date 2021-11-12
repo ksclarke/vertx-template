@@ -1,19 +1,20 @@
 
 package info.freelibrary.vertx.template.handlers;
 
+import static info.freelibrary.vertx.template.MediaType.APPLICATION_JSON;
+
 import info.freelibrary.util.HTTP;
 
-import info.freelibrary.vertx.template.TemplateConstants;
+import info.freelibrary.vertx.template.JsonKeys;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * A handler that accepts requests to mint ARKs.
+ * A handler that processes status information requests.
  */
 public class StatusHandler implements Handler<RoutingContext> {
 
@@ -23,9 +24,9 @@ public class StatusHandler implements Handler<RoutingContext> {
     private final Vertx myVertx;
 
     /**
-     * Creates a handler that mints ARKs.
+     * Creates a handler that returns a status response.
      *
-     * @param aVertx
+     * @param aVertx A Vert.x instance
      */
     public StatusHandler(final Vertx aVertx) {
         myVertx = aVertx;
@@ -33,13 +34,8 @@ public class StatusHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(final RoutingContext aContext) {
-        final HttpServerResponse response = aContext.response();
-        final JsonObject status = new JsonObject();
-
-        status.put(TemplateConstants.STATUS, "ok");
-
-        response.setStatusCode(HTTP.OK);
-        response.putHeader(HttpHeaders.CONTENT_TYPE, TemplateConstants.JSON).end(status.encodePrettily());
+        aContext.response().setStatusCode(HTTP.OK).putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON.toString())
+                .end(new JsonObject().put(JsonKeys.STATUS, "ok").encodePrettily());
     }
 
     /**

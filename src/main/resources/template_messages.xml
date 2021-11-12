@@ -5,10 +5,8 @@
 <properties>
   <entry key="message-class-name">info.freelibrary.vertx.template.MessageCodes</entry>
 
-  <entry key="TMPL_001">Server started and listening at port {}</entry>
-  <entry key="TMPL_002"></entry>
-  <entry key="TMPL_003"></entry>
-  <entry key="TMPL_004"></entry>
-  <entry key="TMPL_005"></entry>
+  <entry key="CODE_001">Server started at port: {}</entry>
+  <entry key="CODE_002"></entry>
+  <entry key="CODE_003"></entry>
 
 </properties>

@@ -11,8 +11,8 @@
 
   <licenses>
     <license>
-      <name>The 3-Clause BSD License</name>
-      <url>https://opensource.org/licenses/BSD-3-clause</url>
+      <name>Mozilla Public License 2.0</name>
+      <url>https://opensource.org/licenses/MPL-2.0</url>
     </license>
   </licenses>
 
@@ -28,26 +28,22 @@
   </issueManagement>
 
   <properties>
-    <vertx.version>4.0.3</vertx.version>
-    <freelib.utils.version>2.2.1</freelib.utils.version>
-    <freelib.maven.version>0.1.2</freelib.maven.version>
-    <slf4j.ext.version>1.7.30</slf4j.ext.version>
+    <vertx.version>4.2.1</vertx.version>
+    <freelib.utils.version>3.0.1</freelib.utils.version>
+    <freelib.maven.version>0.3.0</freelib.maven.version>
+    <slf4j.ext.version>1.7.32</slf4j.ext.version>
 
     <!-- Build plugin versions -->
-    <vertx.plugin.version>1.0.23</vertx.plugin.version>
+    <vertx.plugin.version>1.0.25</vertx.plugin.version>
 
     <!-- Test dependency versions -->
-    <testcontainers.version>1.15.2</testcontainers.version>
+    <testcontainers.version>1.16.2</testcontainers.version>
 
     <!-- Name of the main Vert.x verticle -->
     <main.verticle>info.freelibrary.vertx.template.verticles.MainVerticle</main.verticle>
 
-    <!-- Configuration properties -->
-    <http.port>8888</http.port>
-    <http.host>0.0.0.0</http.host>
-
     <!-- Testing properties -->
-    <live.test.reloads>true</live.test.reloads>
+    <live.test.reloads>false</live.test.reloads>
   </properties>
 
   <dependencyManagement>
@@ -78,6 +74,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <!-- The default scope from the parent is 'test' so we have to override here -->
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -96,18 +93,16 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-openapi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-config</artifactId>
+    </dependency>
 
     <!-- Below is a dependency that needs updating due to security issue (may be able to remove in future) -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-ext</artifactId>
       <version>${slf4j.ext.version}</version>
-    </dependency>
-
-    <!-- A Vert.x plug-in for more flexible configuration control -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-config</artifactId>
     </dependency>
 
     <!-- Below dependencies only used for testing -->
@@ -124,24 +119,43 @@
   </dependencies>
 
   <build>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-      </testResource>
-    </testResources>
     <plugins>
+      <!-- Sets http.test.port for testing the application -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
+      
+      <!-- Processes resources codes and generates media types -->
       <plugin>
         <groupId>info.freelibrary</groupId>
         <artifactId>freelib-maven-plugins</artifactId>
+        <executions>
+          <execution>
+            <id>generate-media-types</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate-mediatype</goal>
+            </goals>
+            <configuration>
+              <mediaTypePackage>info.freelibrary.vertx.template</mediaTypePackage>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
+      
+      <!-- Checks code for best practices, performance, etc. -->
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
+      
+      <!-- Formats code according to our project's rules -->
+      <plugin>
+        <groupId>net.revelc.code.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+      </plugin>
+      
+      <!-- Generates Javadocs documentation -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
@@ -153,29 +167,37 @@
           </links>
         </configuration>
       </plugin>
+      
+      <!-- Checks that conforms to our project's rules -->
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
+      
+      <!-- Enforces rules like: no snapshot dependencies, etc. -->
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
+      
+      <!-- Unpacks build tools from upstream parent project -->
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
       </plugin>
+
+      <!-- Runs unit tests on the application's code -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludes>
-            <exclude>**/*IT.java</exclude>
-          </excludes>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-            <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
-            <http.port>${http.test.port}</http.port>
           </systemPropertyVariables>
+          <environmentVariables>
+            <HTTP_PORT>${http.test.port}</HTTP_PORT>
+          </environmentVariables>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
       </plugin>
+
+      <!-- Packages the application into an uber-jar -->
       <plugin>
         <groupId>io.reactiverse</groupId>
         <artifactId>vertx-maven-plugin</artifactId>
@@ -193,7 +215,6 @@
           <verticle>${main.verticle}</verticle>
           <redeploy>${live.test.reloads}</redeploy>
           <runArgs>
-            <runArg>-Dvertx-config-path=${project.basedir}/target/test-classes/test-config.properties</runArg>
             <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
           </runArgs>
         </configuration>
@@ -244,7 +265,7 @@
                       <directory>${basedir}/src/main/resources</directory>
                       <filtering>true</filtering>
                       <includes>
-                        <include>fester.yaml</include>
+                        <include>template.yaml</include>
                       </includes>
                     </resource>
                     <resource>
@@ -252,25 +273,6 @@
                       <filtering>true</filtering>
                       <includes>
                         <include>logback-test.xml</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-              <execution>
-                <id>copy-application-config-for-testing</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${basedir}/target/test-classes/</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>${basedir}/src/test/resources</directory>
-                      <filtering>true</filtering>
-                      <includes>
-                        <include>test-config.properties</include>
                       </includes>
                     </resource>
                   </resources>
@@ -297,7 +299,8 @@
               <redeploy>${live.test.reloads}</redeploy>
               <jvmArgs>
                 <jvmArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</jvmArg>
-                <jvmArg>-Dvertx-config-path=target/test-classes/test-config.properties</jvmArg>
+                <!-- Pass system props because the plugin doesn't take ENVs (and the config library doesn't care) -->
+                <jvmArg>-DHTTP_PORT=${http.test.port}</jvmArg>
               </jvmArgs>
             </configuration>
           </plugin>
@@ -309,7 +312,7 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>6.7.2</version>
+    <version>7.1.3</version>
   </parent>
 
 </project>
