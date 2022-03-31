@@ -3,6 +3,8 @@ package info.freelibrary.vertx.template.verticles;
 
 import static info.freelibrary.util.Constants.INADDR_ANY;
 
+import java.io.File;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -14,6 +16,7 @@ import info.freelibrary.vertx.template.handlers.StatusHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
@@ -60,7 +63,7 @@ public class MainVerticle extends AbstractVerticle {
         final String host = aConfig.getString(Config.HTTP_HOST, INADDR_ANY);
         final int port = aConfig.getInteger(Config.HTTP_PORT, 8888);
 
-        RouterBuilder.create(vertx, API_SPEC).onFailure(aPromise::fail).onSuccess(routeBuilder -> {
+        RouterBuilder.create(vertx, getRouterSpec()).onFailure(aPromise::fail).onSuccess(routeBuilder -> {
             final HttpServerOptions serverOptions = new HttpServerOptions().setPort(port).setHost(host);
 
             // Associate handlers with operation IDs from the application's OpenAPI specification
@@ -72,5 +75,26 @@ public class MainVerticle extends AbstractVerticle {
                 aPromise.complete();
             });
         });
+    }
+
+    /**
+     * Gets the OpenAPI specification used to configure the application's router. If the file doesn't exist on the file
+     * system, we assume we're running from a Jar and that it can be found in the classpath.
+     *
+     * @return The OpenAPI router specification
+     */
+    private String getRouterSpec() {
+        final File specFile = new File(API_SPEC);
+        return specFile.exists() ? API_SPEC : specFile.getName();
+    }
+
+    /**
+     * Starts up the main verticle.
+     *
+     * @param aArgsArray An array of arguments
+     */
+    @SuppressWarnings("UncommentedMain")
+    public static void main(final String[] aArgsArray) {
+        Vertx.vertx().deployVerticle(new MainVerticle());
     }
 }
