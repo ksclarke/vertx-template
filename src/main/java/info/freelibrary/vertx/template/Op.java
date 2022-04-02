@@ -7,12 +7,12 @@ package info.freelibrary.vertx.template;
 public final class Op {
 
     /**
-     * Mints a new ARK namespace.
+     * A constant for the "get status" operation.
      */
     public static final String GET_STATUS = "getStatus";
 
     /**
-     * Constant class constructors should be private.
+     * Constants class' constructors should be private.
      */
     private Op() {
     }

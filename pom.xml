@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>vertx-template</artifactId>
@@ -269,8 +268,7 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
           <argLine>${jacoco.agent.arg}</argLine>
-          <environmentVariables>
-          </environmentVariables>
+          <environmentVariables></environmentVariables>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
           </systemPropertyVariables>
@@ -307,10 +305,8 @@
                 </args>
                 <dockerFile>${project.basedir}/src/main/docker/Dockerfile</dockerFile>
                 <assembly>
-                  <inline xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
-                      http://maven.apache.org/xsd/assembly-1.1.2.xsd"
-                    xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2">
+                  <inline xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
+                      http://maven.apache.org/xsd/assembly-1.1.2.xsd" xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2">
                     <id>builder-artifact-copy</id>
                     <fileSets>
                       <fileSet>
@@ -328,13 +324,17 @@
                 <containerNamePattern>${project.artifactId}</containerNamePattern>
                 <ports>
                   <!-- Start test container on an available host port -->
-                  <port>${test.http.port}:8888</port>
+                  <port>${http.test.port}:8888</port>
                 </ports>
-                <env>
-                </env>
+                <env></env>
                 <!-- Test to make sure the server started as expected -->
-                <!-- <wait> <http> <url>http://localhost:${test.http.port}/status</url> <method>GET</method> <status>200</status> 
-                  </http> </wait> -->
+                <!--<wait>
+                  <http>
+                    <url>http://localhost:${http.test.port}/status</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                </wait>-->
               </run>
             </image>
           </imagesMap>
