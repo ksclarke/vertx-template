@@ -18,9 +18,7 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class StatusHandler implements Handler<RoutingContext> {
 
-    /**
-     * The handler's copy of the Vert.x instance.
-     */
+    /** The handler's copy of the Vert.x instance. */
     private final Vertx myVertx;
 
     /**
