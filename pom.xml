@@ -66,8 +66,7 @@
     <!-- The Docker registry user and password used for publishing images -->
     <docker.registry.username />
     <docker.registry.password />
-    <!-- The Docker registry account, if supplied, must end with a slash (e.g.
-    "account/") -->
+    <!-- The Docker registry account, if supplied, must end with a slash (e.g. "account/") -->
     <docker.registry.account />
   </properties>
 
@@ -167,13 +166,11 @@
         </configuration>
       </plugin>
 
-      <!-- Configures the compiler to work with the vertx-codegen dependency (if
-      necessary) -->
+      <!-- Configures the compiler to work with the vertx-codegen dependency (if necessary) -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <!-- Incremental compilation causes problems with vertx-codegen:
-          https://bitly.com/3LpCY0A+ -->
+          <!-- Incremental compilation causes problems with vertx-codegen: https://bitly.com/3LpCY0A+ -->
           <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
       </plugin>
@@ -307,10 +304,8 @@
         <configuration>
           <imagesMap>
             <image>
-              <!-- Registry account, if supplied, must end in a slash (e.g.
-              "account/") -->
-              <!-- The %l at the end translates to "latest" if version ends in
-              "-SNAPSHOT" -->
+              <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
+              <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
               <name>${docker.registry.account}${project.artifactId}:%l</name>
               <build>
                 <args>
@@ -321,11 +316,9 @@
                   <inline>
                     <fileSets>
                       <fileSet>
-                        <!-- The directory where we can find our Maven-built
-                        artifact -->
+                        <!-- The directory where we can find our Maven-built artifact -->
                         <directory>${project.basedir}/target/</directory>
-                        <!-- We don't want directory structure on output, just
-                        the artifact -->
+                        <!-- We don't want directory structure on output, just the artifact -->
                         <outputDirectory>.</outputDirectory>
                         <includes>
                           <include>${project.artifactId}-${project.version}.jar</include>
@@ -398,10 +391,8 @@
             <configuration>
               <images>
                 <image>
-                  <!-- Registry account, if supplied, must end in a slash (e.g.
-                  "account/") -->
-                  <!-- The %l at the end translates to "latest" if version ends
-                  in "-SNAPSHOT" -->
+                  <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
+                  <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
                   <name>${docker.registry.account}${project.artifactId}:%l</name>
                 </image>
               </images>
@@ -495,8 +486,7 @@
               <jvmArgs>
                 <jvmArg>
                   -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</jvmArg>
-                <!-- Pass system props because the plugin doesn't take ENVs (and
-                the config library doesn't care) -->
+                <!-- Pass system props because the plugin doesn't take ENVs (and the config library doesn't care) -->
                 <jvmArg>-DHTTP_PORT=${test.http.port}</jvmArg>
               </jvmArgs>
             </configuration>
@@ -517,8 +507,7 @@
           <plugin>
             <groupId>io.snyk</groupId>
             <artifactId>snyk-maven-plugin</artifactId>
-            <!-- Configurations have to be overridden in the executions'
-            configuration elements -->
+            <!-- Configurations have to be overridden in the executions' configuration elements -->
             <executions>
               <execution>
                 <id>snyk-test</id>
@@ -533,8 +522,7 @@
     </profile>
   </profiles>
 
-  <!-- The parent project still uses the older repo locations; new projects use
-  the below -->
+  <!-- The parent project still uses the older repo locations; new projects use the below -->
   <distributionManagement>
     <snapshotRepository>
       <id>ossrh</id>
