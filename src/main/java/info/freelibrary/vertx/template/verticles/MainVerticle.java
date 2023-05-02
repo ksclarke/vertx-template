@@ -67,7 +67,7 @@ public class MainVerticle extends AbstractVerticle {
             final HttpServerOptions serverOptions = new HttpServerOptions().setPort(port).setHost(host);
 
             // Associate handlers with operation IDs from the application's OpenAPI specification
-            routeBuilder.operation(Op.GET_STATUS).handler(new StatusHandler(getVertx()));
+            routeBuilder.operation(Op.GET_STATUS.id()).handler(new StatusHandler(getVertx()));
 
             myServer = getVertx().createHttpServer(serverOptions).requestHandler(routeBuilder.createRouter());
             myServer.listen().onFailure(aPromise::fail).onSuccess(result -> {

@@ -1,53 +1,51 @@
 
 package info.freelibrary.vertx.template.verticles;
 
-import static info.freelibrary.util.Constants.INADDR_ANY;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import info.freelibrary.util.Constants;
 import info.freelibrary.util.HTTP;
 
 import info.freelibrary.vertx.template.Config;
+import info.freelibrary.vertx.template.Op;
 
+import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.RunTestOnContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
 /**
  * Tests the main verticle of the Vert.x application.
  */
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class MainVerticleTest {
 
-    /**
-     * Rule that creates the test context.
-     */
-    @Rule
-    public RunTestOnContext myContext = new RunTestOnContext();
+    /** A Vert.x configuration retriever. */
+    private static ConfigRetriever myConfigRetriever;
 
     /**
      * Sets up the test.
      *
+     * @param aVertx A Vert.x instance
      * @param aContext A test context
      */
-    @Before
-    public void setUp(final TestContext aContext) {
-        final int port = Integer.parseInt(System.getenv(Config.HTTP_PORT));
-        final DeploymentOptions options = new DeploymentOptions();
-        final Async asyncTask = aContext.async();
+    @BeforeAll
+    public static void setUp(final Vertx aVertx, final VertxTestContext aContext) {
+        myConfigRetriever = ConfigRetriever.create(aVertx);
 
-        aContext.put(Config.HTTP_PORT, port);
-        options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
+        // Store the relevant test configuration details in our deployment options
+        myConfigRetriever.getConfig().onFailure(aContext::failNow).onSuccess(config -> {
+            final DeploymentOptions options = new DeploymentOptions().setConfig(config);
 
-        myContext.vertx().deployVerticle(MainVerticle.class.getName(), options)
-                .onSuccess(result -> asyncTask.complete()).onFailure(aContext::fail);
+            aVertx.deployVerticle(MainVerticle.class.getName(), options).onFailure(aContext::failNow).onSuccess(id -> {
+                aContext.completeNow();
+            });
+        });
     }
 
     /**
@@ -56,24 +54,16 @@ public class MainVerticleTest {
      * @param aContext A test context
      */
     @Test
-    public void testThatTheServerIsStarted(final TestContext aContext) {
-        final WebClient client = WebClient.create(myContext.vertx());
-        final Async asyncTask = aContext.async();
+    public void testThatTheServerIsStarted(final Vertx aVertx, final VertxTestContext aContext) {
+        myConfigRetriever.getConfig().onFailure(aContext::failNow).onSuccess(config -> {
+            final int port = config.getInteger(Config.HTTP_PORT);
+            final WebClient client = WebClient.create(aVertx);
 
-        client.get(aContext.get(Config.HTTP_PORT), INADDR_ANY, "/status").send().onSuccess(response -> {
-            aContext.assertEquals(HTTP.OK, response.statusCode());
-            complete(asyncTask);
-        }).onFailure(aContext::fail);
-    }
-
-    /**
-     * A convenience method to end asynchronous tasks.
-     *
-     * @param aAsyncTask A task to complete
-     */
-    private void complete(final Async aAsyncTask) {
-        if (!aAsyncTask.isCompleted()) {
-            aAsyncTask.complete();
-        }
+            client.get(port, Constants.INADDR_ANY, Op.GET_STATUS.endpoint()).send().onSuccess(response -> {
+                aContext.verify(() -> {
+                    Assertions.assertEquals(HTTP.OK, response.statusCode());
+                }).completeNow();
+            }).onFailure(aContext::failNow);
+        });
     }
 }
