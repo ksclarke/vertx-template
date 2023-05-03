@@ -1,6 +1,6 @@
 # Vert.x Template
 
-This is a Vert.x template that can be customized for a new project.
+This is a Vert.x template project.
 
 ## Running in Development
 
