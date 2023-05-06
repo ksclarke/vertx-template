@@ -381,7 +381,7 @@
             </configuration>
           </execution>
 
-          <!-- Deploys the Hauth Docker image -->
+          <!-- Deploys the application's Docker image -->
           <execution>
             <id>docker-deploy</id>
             <phase>deploy</phase>
